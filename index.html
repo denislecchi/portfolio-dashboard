@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Dashboard - Denis Lecchi</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .stat-card .label {
+            font-size: 0.85em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stat-card .value.positive {
+            color: #10b981;
+        }
+
+        .stat-card .value.negative {
+            color: #ef4444;
+        }
+
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f9fafb;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #666;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .symbol {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .positive {
+            color: #10b981;
+        }
+
+        .negative {
+            color: #ef4444;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 0.9em;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Portfolio Dashboard</h1>
+            <p class="subtitle">Last updated: February 27, 2026 at 02:16 PM</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">Since Inception</div>
+                <div class="value positive">+743.92%</div>
+                <div class="subtitle" style="margin-top: 5px; font-size: 0.85em; color: #666;">Started October 2021</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">S&P 500</div>
+                <div class="value">+71.67%</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Outperformance</div>
+                <div class="value positive">+672.25%</div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">Total Value</div>
+                <div class="value">$364,501.78</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Unrealized P&L</div>
+                <div class="value positive">$+105,241.16</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Total Return</div>
+                <div class="value positive">+40.59%</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Positions</div>
+                <div class="value">23</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📈 Performance vs S&P 500 (Since Inception)</h2>
+            <div id="performanceChart" class="chart-container"></div>
+        </div>
+
+        <script>
+            var dates = ['2021-10-01', '2021-11-01', '2021-12-01', '2022-01-01', '2022-02-01', '2022-03-01', '2022-04-01', '2022-05-01', '2022-06-01', '2022-07-01', '2022-08-01', '2022-09-01', '2022-10-01', '2022-11-01', '2022-12-01', '2023-01-01', '2023-02-01', '2023-03-01', '2023-04-01', '2023-05-01', '2023-06-01', '2023-07-01', '2023-08-01', '2023-09-01', '2023-10-01', '2023-11-01', '2023-12-01', '2024-01-01', '2024-02-01', '2024-03-01', '2024-04-01', '2024-05-01', '2024-06-01', '2024-07-01', '2024-08-01', '2024-09-01', '2024-10-01', '2024-11-01', '2024-12-01', '2025-01-01', '2025-02-01', '2025-03-01', '2025-04-01', '2025-05-01', '2025-06-01', '2025-07-01', '2025-08-01', '2025-09-01', '2025-10-01', '2025-11-01', '2025-12-01', '2026-01-01'];
+            var portfolioReturns = [2.5460080720000065, -9.528281669233536, -10.06783474888296, -18.181479221398178, -18.64417620691061, -10.983758325271026, -13.37452776611012, -15.25937009349832, -20.96638681170076, -19.66556758126188, -28.605859125813023, -31.14178480401263, -27.40588016883197, -28.759435941181025, -33.3243173663292, -29.594067081342928, -31.638661883737345, -27.910520329150785, -27.156836481107177, -16.905172997166247, -17.660643440517916, -9.03377471172098, -19.22166739652896, -21.26524212481924, -24.65026048761507, -3.181951026830262, -3.43852128480583, -7.434700583528581, 6.973016114142979, 5.286746752123818, -3.680307193535541, 3.679722586157624, 3.330456439261553, 7.836644145233933, 6.320163437445018, 30.445345149866935, 31.880955107143706, 228.23609610077, 228.6277540935244, 241.71008114734104, 125.20221754084396, 86.1602919963052, 91.89353968607996, 145.98576853327887, 233.5000729478984, 332.90755479566235, 377.2280735668304, 418.6568865570066, 586.6240082233357, 363.7676628955738, 580.7584841175872, 743.915437411263];
+            var sp500Returns = [7.006135747000002, 6.264709839143293, 11.027112241082122, 5.281811885764398, 2.1294454710201194, 5.921512692353744, -3.315015402548965, -3.1376913178729358, -11.13306199170087, -2.9391328126313283, -6.897406621157003, -15.472110089420326, -8.628623330639073, -3.522356730752037, -9.080883129201126, -3.3680458660231807, -5.725844735268254, -2.2646342398826818, -0.7390912339899813, -0.3076211563126207, 6.279607284586007, 9.693790765104836, 7.947343083772338, 2.8006087929233416, 0.6390337548856735, 9.829980109419978, 14.819624160839822, 16.749065850697534, 22.98298022096141, 26.939919930045363, 21.75505262332362, 27.79229846316565, 32.37771030527398, 33.98908039191551, 37.23916960968015, 40.17018664972909, 38.89912316170344, 47.052584650185736, 43.54712651455529, 47.54453391395239, 45.61942804808319, 37.414603721872766, 36.48273508170368, 45.07367009649579, 52.45101908504111, 55.87242893975636, 59.03224407806266, 64.8369118711837, 68.69635112683073, 69.10981085934554, 69.21331476090907, 71.66694645803412];
+
+            var trace1 = {
+                x: dates,
+                y: portfolioReturns,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Your Portfolio',
+                line: {color: '#667eea', width: 3}
+            };
+
+            var trace2 = {
+                x: dates,
+                y: sp500Returns,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'S&P 500',
+                line: {color: '#10b981', width: 2, dash: 'dot'}
+            };
+
+            var layout = {
+                xaxis: {title: 'Date'},
+                yaxis: {title: 'Cumulative Return (%)', tickformat: '.1f'},
+                hovermode: 'x unified',
+                margin: {t: 20, b: 40, l: 60, r: 20},
+                legend: {x: 0.02, y: 0.98}
+            };
+
+            Plotly.newPlot('performanceChart', [trace1, trace2], layout, {responsive: true});
+        </script>
+
+        <div class="section">
+            <h2>📅 Annual Returns</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Year</th>
+                        <th>Your Return</th>
+                        <th>S&P 500</th>
+                        <th>Outperformance</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <tr>
+                        <td><strong>2025</strong></td>
+                        <td class="positive">+107.15%</td>
+                        <td class="positive">+17.88%</td>
+                        <td class="positive">+89.27%</td>
+                    </tr>
+
+                    <tr>
+                        <td><strong>2024</strong></td>
+                        <td class="positive">+240.33%</td>
+                        <td class="positive">+25.02%</td>
+                        <td class="positive">+215.31%</td>
+                    </tr>
+
+                    <tr>
+                        <td><strong>2023</strong></td>
+                        <td class="positive">+44.82%</td>
+                        <td class="positive">+26.29%</td>
+                        <td class="positive">+18.53%</td>
+                    </tr>
+
+                    <tr>
+                        <td><strong>2022</strong></td>
+                        <td class="negative">-25.86%</td>
+                        <td class="negative">-18.11%</td>
+                        <td class="negative">-7.75%</td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>📋 Stock Holdings</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Quantity</th>
+                        <th>Cost Basis</th>
+                        <th>Market Value</th>
+                        <th>Unrealized P&L</th>
+                        <th>Return %</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <tr>
+                        <td class="symbol">RKLB</td>
+                        <td>3000</td>
+                        <td>$130,094.34</td>
+                        <td>$217,950.00</td>
+                        <td class="positive">$+87,855.66</td>
+                        <td class="positive">+67.53%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">INTC</td>
+                        <td>1200</td>
+                        <td>$34,972.23</td>
+                        <td>$54,552.00</td>
+                        <td class="positive">$+19,579.77</td>
+                        <td class="positive">+55.99%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">RDW</td>
+                        <td>1200</td>
+                        <td>$10,254.83</td>
+                        <td>$11,460.00</td>
+                        <td class="positive">$+1,205.17</td>
+                        <td class="positive">+11.75%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">PLUG</td>
+                        <td>6000</td>
+                        <td>$11,246.72</td>
+                        <td>$11,460.00</td>
+                        <td class="positive">$+213.28</td>
+                        <td class="positive">+1.90%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">ALGM</td>
+                        <td>300</td>
+                        <td>$8,781.60</td>
+                        <td>$11,031.00</td>
+                        <td class="positive">$+2,249.40</td>
+                        <td class="positive">+25.61%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">AEVA</td>
+                        <td>800</td>
+                        <td>$10,838.31</td>
+                        <td>$10,912.00</td>
+                        <td class="positive">$+73.69</td>
+                        <td class="positive">+0.68%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">AMBQ</td>
+                        <td>330</td>
+                        <td>$10,181.66</td>
+                        <td>$10,678.80</td>
+                        <td class="positive">$+497.14</td>
+                        <td class="positive">+4.88%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">ZENA</td>
+                        <td>2100</td>
+                        <td>$7,004.34</td>
+                        <td>$5,901.00</td>
+                        <td class="negative">$-1,103.34</td>
+                        <td class="negative">-15.75%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">ABAT</td>
+                        <td>1000</td>
+                        <td>$4,187.69</td>
+                        <td>$3,840.00</td>
+                        <td class="negative">$-347.69</td>
+                        <td class="negative">-8.30%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">NEXIm</td>
+                        <td>1000</td>
+                        <td>$3,229.00</td>
+                        <td>$3,418.00</td>
+                        <td class="positive">$+189.00</td>
+                        <td class="positive">+5.85%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">WOLF</td>
+                        <td>160</td>
+                        <td>$2,715.15</td>
+                        <td>$3,233.60</td>
+                        <td class="positive">$+518.45</td>
+                        <td class="positive">+19.09%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">UAVS</td>
+                        <td>3100</td>
+                        <td>$5,602.13</td>
+                        <td>$3,052.88</td>
+                        <td class="negative">$-2,549.25</td>
+                        <td class="negative">-45.51%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">LAES</td>
+                        <td>700</td>
+                        <td>$2,835.80</td>
+                        <td>$2,891.00</td>
+                        <td class="positive">$+55.20</td>
+                        <td class="positive">+1.95%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">WATT</td>
+                        <td>200</td>
+                        <td>$1,717.99</td>
+                        <td>$2,460.00</td>
+                        <td class="positive">$+742.01</td>
+                        <td class="positive">+43.19%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">OPTT</td>
+                        <td>6000</td>
+                        <td>$2,849.40</td>
+                        <td>$2,400.00</td>
+                        <td class="negative">$-449.40</td>
+                        <td class="negative">-15.77%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">RR</td>
+                        <td>700</td>
+                        <td>$2,721.51</td>
+                        <td>$1,918.00</td>
+                        <td class="negative">$-803.51</td>
+                        <td class="negative">-29.52%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">ALMU</td>
+                        <td>100</td>
+                        <td>$1,545.33</td>
+                        <td>$1,600.00</td>
+                        <td class="positive">$+54.67</td>
+                        <td class="positive">+3.54%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">PGY</td>
+                        <td>100</td>
+                        <td>$1,750.05</td>
+                        <td>$1,241.00</td>
+                        <td class="negative">$-509.05</td>
+                        <td class="negative">-29.09%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">CELU</td>
+                        <td>1000</td>
+                        <td>$1,975.03</td>
+                        <td>$1,240.00</td>
+                        <td class="negative">$-735.03</td>
+                        <td class="negative">-37.22%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">ALVO</td>
+                        <td>250</td>
+                        <td>$2,120.01</td>
+                        <td>$1,040.00</td>
+                        <td class="negative">$-1,080.01</td>
+                        <td class="negative">-50.94%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">SSYS</td>
+                        <td>100</td>
+                        <td>$1,107.00</td>
+                        <td>$989.00</td>
+                        <td class="negative">$-118.00</td>
+                        <td class="negative">-10.66%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">CLPT</td>
+                        <td>50</td>
+                        <td>$1,056.50</td>
+                        <td>$721.50</td>
+                        <td class="negative">$-335.00</td>
+                        <td class="negative">-31.71%</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">MBOT</td>
+                        <td>200</td>
+                        <td>$474.01</td>
+                        <td>$512.00</td>
+                        <td class="positive">$+37.99</td>
+                        <td class="positive">+8.02%</td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>💰 Options Portfolio</h2>
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="label">Total Contracts</div>
+                    <div class="value">34</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Premium Collected</div>
+                    <div class="value">$50,925.80</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Current Value</div>
+                    <div class="value">$36,889.56</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Unrealized P&L</div>
+                    <div class="value positive">$+14,036.24</div>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Underlying</th>
+                        <th>Strategy</th>
+                        <th>Strike</th>
+                        <th>Expiry</th>
+                        <th>Contracts</th>
+                        <th>Premium</th>
+                        <th>Current Value</th>
+                        <th>P&L</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <tr>
+                        <td class="symbol">RKLB</td>
+                        <td>C Sold</td>
+                        <td>105.0</td>
+                        <td>17APR26</td>
+                        <td>24</td>
+                        <td>$8,192.99</td>
+                        <td>$5,340.00</td>
+                        <td class="positive">$+2,852.99</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">RKLB</td>
+                        <td>P Sold</td>
+                        <td>55.0</td>
+                        <td>21JAN28</td>
+                        <td>4</td>
+                        <td>$9,554.51</td>
+                        <td>$7,463.40</td>
+                        <td class="positive">$+2,091.11</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">INTC</td>
+                        <td>P Sold</td>
+                        <td>20.0</td>
+                        <td>17DEC27</td>
+                        <td>5</td>
+                        <td>$2,026.67</td>
+                        <td>$778.70</td>
+                        <td class="positive">$+1,247.97</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">RKLB</td>
+                        <td>P Sold</td>
+                        <td>25.0</td>
+                        <td>15JAN27</td>
+                        <td>2</td>
+                        <td>$1,529.16</td>
+                        <td>$343.62</td>
+                        <td class="positive">$+1,185.54</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">RKLB</td>
+                        <td>C Sold</td>
+                        <td>100.0</td>
+                        <td>17APR26</td>
+                        <td>6</td>
+                        <td>$2,592.74</td>
+                        <td>$1,694.70</td>
+                        <td class="positive">$+898.04</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">RKLB</td>
+                        <td>P Sold</td>
+                        <td>50.0</td>
+                        <td>21JAN28</td>
+                        <td>1</td>
+                        <td>$2,325.95</td>
+                        <td>$1,591.79</td>
+                        <td class="positive">$+734.16</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">INTC</td>
+                        <td>P Sold</td>
+                        <td>27.0</td>
+                        <td>17DEC27</td>
+                        <td>2</td>
+                        <td>$1,364.59</td>
+                        <td>$706.96</td>
+                        <td class="positive">$+657.63</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">INTC</td>
+                        <td>P Sold</td>
+                        <td>35.0</td>
+                        <td>17DEC27</td>
+                        <td>1</td>
+                        <td>$1,249.37</td>
+                        <td>$685.00</td>
+                        <td class="positive">$+564.37</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">RKLB</td>
+                        <td>P Sold</td>
+                        <td>40.0</td>
+                        <td>18DEC26</td>
+                        <td>1</td>
+                        <td>$1,019.95</td>
+                        <td>$506.10</td>
+                        <td class="positive">$+513.85</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">INTC</td>
+                        <td>P Sold</td>
+                        <td>22.0</td>
+                        <td>17DEC27</td>
+                        <td>2</td>
+                        <td>$881.17</td>
+                        <td>$413.68</td>
+                        <td class="positive">$+467.49</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">INTC</td>
+                        <td>P Sold</td>
+                        <td>30.0</td>
+                        <td>17DEC27</td>
+                        <td>1</td>
+                        <td>$898.95</td>
+                        <td>$473.44</td>
+                        <td class="positive">$+425.51</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">RKLB</td>
+                        <td>P Sold</td>
+                        <td>40.0</td>
+                        <td>21JAN28</td>
+                        <td>2</td>
+                        <td>$2,494.14</td>
+                        <td>$2,090.24</td>
+                        <td class="positive">$+403.90</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">RDW</td>
+                        <td>P Sold</td>
+                        <td>12.0</td>
+                        <td>15JAN27</td>
+                        <td>5</td>
+                        <td>$2,974.54</td>
+                        <td>$2,612.95</td>
+                        <td class="positive">$+361.59</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">RKLB</td>
+                        <td>P Sold</td>
+                        <td>39.0</td>
+                        <td>17JUL26</td>
+                        <td>1</td>
+                        <td>$537.23</td>
+                        <td>$207.54</td>
+                        <td class="positive">$+329.69</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">INTC</td>
+                        <td>P Sold</td>
+                        <td>18.0</td>
+                        <td>17DEC27</td>
+                        <td>1</td>
+                        <td>$419.35</td>
+                        <td>$124.89</td>
+                        <td class="positive">$+294.46</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">INTC</td>
+                        <td>P Sold</td>
+                        <td>40.0</td>
+                        <td>21JAN28</td>
+                        <td>1</td>
+                        <td>$1,245.95</td>
+                        <td>$951.93</td>
+                        <td class="positive">$+294.02</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">OUST</td>
+                        <td>P Sold</td>
+                        <td>7.0</td>
+                        <td>15JAN27</td>
+                        <td>2</td>
+                        <td>$415.88</td>
+                        <td>$141.76</td>
+                        <td class="positive">$+274.12</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">INTC</td>
+                        <td>P Sold</td>
+                        <td>42.0</td>
+                        <td>21JAN28</td>
+                        <td>1</td>
+                        <td>$1,325.95</td>
+                        <td>$1,054.34</td>
+                        <td class="positive">$+271.61</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">INTC</td>
+                        <td>P Sold</td>
+                        <td>35.0</td>
+                        <td>15MAY26</td>
+                        <td>1</td>
+                        <td>$361.23</td>
+                        <td>$124.15</td>
+                        <td class="positive">$+237.08</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">INTC</td>
+                        <td>P Sold</td>
+                        <td>45.0</td>
+                        <td>21JAN28</td>
+                        <td>1</td>
+                        <td>$1,394.98</td>
+                        <td>$1,232.63</td>
+                        <td class="positive">$+162.35</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">INTC</td>
+                        <td>P Sold</td>
+                        <td>45.0</td>
+                        <td>19MAR27</td>
+                        <td>1</td>
+                        <td>$1,108.95</td>
+                        <td>$975.00</td>
+                        <td class="positive">$+133.95</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">WOLF</td>
+                        <td>P Sold</td>
+                        <td>15.0</td>
+                        <td>20MAR26</td>
+                        <td>1</td>
+                        <td>$159.30</td>
+                        <td>$36.50</td>
+                        <td class="positive">$+122.80</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">AEVA</td>
+                        <td>P Sold</td>
+                        <td>12.5</td>
+                        <td>20MAR26</td>
+                        <td>1</td>
+                        <td>$169.00</td>
+                        <td>$102.50</td>
+                        <td class="positive">$+66.50</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">RDW</td>
+                        <td>P Sold</td>
+                        <td>10.0</td>
+                        <td>21JAN28</td>
+                        <td>2</td>
+                        <td>$1,112.03</td>
+                        <td>$1,056.72</td>
+                        <td class="positive">$+55.31</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">INTC</td>
+                        <td>P Sold</td>
+                        <td>36.0</td>
+                        <td>17APR26</td>
+                        <td>2</td>
+                        <td>$237.15</td>
+                        <td>$185.00</td>
+                        <td class="positive">$+52.15</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">INTC</td>
+                        <td>P Sold</td>
+                        <td>38.0</td>
+                        <td>15MAY26</td>
+                        <td>1</td>
+                        <td>$207.95</td>
+                        <td>$202.10</td>
+                        <td class="positive">$+5.85</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">RDW</td>
+                        <td>P Sold</td>
+                        <td>9.0</td>
+                        <td>15MAY26</td>
+                        <td>1</td>
+                        <td>$154.95</td>
+                        <td>$150.78</td>
+                        <td class="positive">$+4.17</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">INTC</td>
+                        <td>P Sold</td>
+                        <td>41.0</td>
+                        <td>17APR26</td>
+                        <td>1</td>
+                        <td>$196.52</td>
+                        <td>$208.21</td>
+                        <td class="negative">$-11.69</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">AEVA</td>
+                        <td>P Sold</td>
+                        <td>12.5</td>
+                        <td>17APR26</td>
+                        <td>4</td>
+                        <td>$564.09</td>
+                        <td>$630.04</td>
+                        <td class="negative">$-65.95</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">RDW</td>
+                        <td>P Sold</td>
+                        <td>10.0</td>
+                        <td>15MAY26</td>
+                        <td>1</td>
+                        <td>$144.75</td>
+                        <td>$216.00</td>
+                        <td class="negative">$-71.25</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">INTC</td>
+                        <td>P Sold</td>
+                        <td>45.0</td>
+                        <td>17DEC27</td>
+                        <td>1</td>
+                        <td>$1,144.20</td>
+                        <td>$1,220.00</td>
+                        <td class="negative">$-75.80</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">RDW</td>
+                        <td>C Sold</td>
+                        <td>10.0</td>
+                        <td>02APR26</td>
+                        <td>12</td>
+                        <td>$1,261.18</td>
+                        <td>$1,372.56</td>
+                        <td class="negative">$-111.38</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">WOLF</td>
+                        <td>C Sold</td>
+                        <td>20.0</td>
+                        <td>20MAR26</td>
+                        <td>1</td>
+                        <td>$93.95</td>
+                        <td>$214.78</td>
+                        <td class="negative">$-120.83</td>
+                    </tr>
+
+                    <tr>
+                        <td class="symbol">ZENA</td>
+                        <td>P Sold</td>
+                        <td>5.0</td>
+                        <td>21JAN28</td>
+                        <td>5</td>
+                        <td>$1,566.51</td>
+                        <td>$1,781.55</td>
+                        <td class="negative">$-215.04</td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</body>
+</html>
